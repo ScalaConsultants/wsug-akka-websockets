@@ -47,7 +47,7 @@ object Server extends App {
   /**
     * Route of last chance
     */
-  def catchAllRoute = ???
+  def catchAllRoute = complete("Welcome to websocket server!!")
 
   /**
     * Echo Websocket Route
