@@ -57,12 +57,13 @@ object Server extends App {
   /**
     * Websocket chat route
     */
-  def chatRoute = ???
+  def chatRoute = ChatService.route
 
   /**
     * Composite route for server logic
     */
   def route =
+    chatRoute ~
     echoRoute ~
       catchAllRoute
 
