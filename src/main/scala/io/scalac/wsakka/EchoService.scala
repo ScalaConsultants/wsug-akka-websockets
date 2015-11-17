@@ -12,5 +12,8 @@ object EchoService {
     }
   }
 
-  val echoService: Flow[Message, Message, Any] = ???
+  val echoService: Flow[Message, Message, Any] = Flow[Message].map {
+    case TextMessage.Strict(txt) => TextMessage("ECHO: " + txt)
+    //BinaryMessage? :)
+  }
 }
