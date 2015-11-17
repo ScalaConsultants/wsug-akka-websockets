@@ -9,9 +9,55 @@ class ChatRoom(actorSystem: ActorSystem) {
 
   private[this] val chatRoomActor = actorSystem.actorOf(Props[ChatRoomActor])
 
-  def sendMessage(message: ChatMessage): Unit = chatRoomActor ! message
+  def websocketFlow(user: String): Flow[Message, Message, Any] =
+    Flow.fromGraph(
 
-  def websocketFlow(user: String): Flow[Message, Message, Any] = ???
+      FlowGraph.create(Source.actorRef[ChatMessage](bufferSize = 5, OverflowStrategy.fail)) {
+        implicit builder =>
+          chatSource =>
+
+            import FlowGraph.Implicits._
+
+            //input flow, all Messages
+            val fromWebsocket = builder.add(
+              Flow[Message].collect {
+                case TextMessage.Strict(txt) => IncomingMessage(user, txt)
+              })
+
+            //          //output flow, it returns Message's
+            val backToWebsocket = builder.add(
+              Flow[ChatMessage].map {
+                case ChatMessage(author, text) => TextMessage(s"[$author]: $text")
+              }
+            )
+
+            //          //send messages to the actor, if send also UserLeft(user) before stream completes.
+            val chatActorSink = Sink.actorRef[ChatEvent](chatRoomActor, UserLeft(user))
+
+            //          //merges both pipes
+            val merge = builder.add(Merge[ChatEvent](2))
+
+            //          //Materialized value of Actor who sit in chatroom
+            val actorAsSource = builder.materializedValue.map(actor => UserJoined(user, actor))
+
+            //          //Message from websocket is converted into IncommingMessage and should be send to each in room
+            fromWebsocket ~> merge.in(0)
+
+            //          //If Source actor is just created should be send as UserJoined and registered as particiant in room
+            actorAsSource ~> merge.in(1)
+
+            //          //Merges both pipes above and forward messages to chatroom Represented by ChatRoomActor
+            merge ~> chatActorSink
+
+            //          //Actor already sit in chatRoom so each message from room is used as source and pushed back into websocket
+            chatSource ~> backToWebsocket
+
+            //          // expose ports
+            FlowShape(fromWebsocket.inlet, backToWebsocket.outlet)
+      }
+
+    )
+
 
 }
 
