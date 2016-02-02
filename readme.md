@@ -2,7 +2,7 @@ project file for http://www.meetup.com/WarsawScala/events/226548052/
 
 akka-websocket example
 
-branch master represents first stage of code. Just before creating first route.
+branch master represents complete code, if you want to use particular steps (like in presentation) use proper branches.
 
 there are also branches for `stage2` and `stage3` with solutions in `stage2a` and `stage3a` branches
 
