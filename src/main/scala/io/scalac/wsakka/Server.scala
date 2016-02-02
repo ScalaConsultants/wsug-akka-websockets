@@ -47,21 +47,24 @@ object Server extends App {
   /**
     * Route of last chance
     */
-  def catchAllRoute = ???
+  def catchAllRoute = complete("Welcome to websocket server!!")
 
   /**
     * Echo Websocket Route
     */
-  def echoRoute = ???
+  def echoRoute = EchoService.route
 
   /**
     * Websocket chat route
     */
-  def chatRoute = ???
+  def chatRoute = ChatService.route
 
   /**
     * Composite route for server logic
     */
-  def route = catchAllRoute
+  def route =
+    chatRoute ~
+    echoRoute ~
+      catchAllRoute
 
 }
